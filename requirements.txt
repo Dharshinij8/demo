@@ -1,7 +1,8 @@
 streamlit
 wikipedia
 SpeechRecognition
-opencv-python
+opencv-python-headless
 numpy
 Pillow
 pyzbar
+
