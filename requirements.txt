@@ -1,8 +1,7 @@
 streamlit
 wikipedia
 SpeechRecognition
-Pillow
 opencv-python
 numpy
+Pillow
 pyzbar
-python-dotenv
