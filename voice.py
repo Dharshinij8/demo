@@ -110,17 +110,22 @@ with tab2:
 
     uploaded_file = st.file_uploader("Upload QR image", type=["png", "jpg", "jpeg"])
 
+    def decode_qr_opencv(img):
+        detector = cv2.QRCodeDetector()
+        data, points, _ = detector.detectAndDecode(img)
+        if points is not None and data:
+            return data
+        return None
+
     if uploaded_file:
         img = Image.open(uploaded_file)
-        img = img.convert('RGB')  # ensure RGB (no alpha)
-        st.image(img, caption="Uploaded QR Code", use_container_width=True)
+        st.image(img, caption="Uploaded QR Code", use_column_width=True)
 
-        decoded_objects = decode(img)  # decode expects PIL image
+        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        decoded_data = decode_qr_opencv(img_cv)
 
-        if decoded_objects:
-            for obj in decoded_objects:
-                data = obj.data.decode("utf-8")
-                st.success(f"🔓 Decoded Data: {data}")
+        if decoded_data:
+            st.success(f"🔓 Decoded Data: {decoded_data}")
         else:
             st.warning("⚠️ No QR code detected.")
 
@@ -173,5 +178,6 @@ with tab3:
             st.image(fpath, use_container_width=True)
     else:
         st.info("No snapshots uploaded yet.")
+
 
 
