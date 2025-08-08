@@ -1,8 +1,8 @@
 streamlit
 wikipedia
 SpeechRecognition
-googletrans==4.0.0-rc1
+deep-translator
 pillow
+opencv-python-headless
 pandas
 numpy
-opencv-python-headless
