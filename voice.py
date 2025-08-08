@@ -171,9 +171,11 @@ with tab3:
         st.markdown("### Saved Snapshots:")
         for fname in saved_files:
             fpath = os.path.join(SNAPSHOT_DIR, fname)
-            st.image(fpath, use_column_width=True)
+           st.image(fpath, use_container_width=True)
+
     else:
         st.info("No snapshots uploaded yet.")
+
 
 
 
