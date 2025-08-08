@@ -6,6 +6,8 @@ import os
 from PIL import Image
 import cv2
 import numpy as np
+import qrcode
+import io
 
 st.set_page_config(page_title="Chatbot + QR Scanner", layout="centered")
 st.markdown(
@@ -102,30 +104,28 @@ with tab1:
             st.session_state.chat_history.clear()
             st.success("Chat history cleared!")
 
-# --- TAB 2: QR Code Scanner ---
-with tab2:
-    st.subheader("📷 Upload a QR Code Image to Scan")
 
-    uploaded_file = st.file_uploader("Upload QR image", type=["png", "jpg", "jpeg"])
+# URL of image or video
+url = "https://example.com/myimage.jpg"  # Replace with your actual URL
 
-    def decode_qr_opencv(img):
-        detector = cv2.QRCodeDetector()
-        data, points, _ = detector.detectAndDecode(img)
-        if points is not None and data:
-            return data
-        return None
+# Generate QR code
+qr = qrcode.QRCode(version=1, box_size=10, border=5)
+qr.add_data(url)
+qr.make(fit=True)
 
-    if uploaded_file:
-        img = Image.open(uploaded_file)
-        st.image(img, caption="Uploaded QR Code", use_column_width=True)
+img = qr.make_image(fill='black', back_color='white')
 
-        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        decoded_data = decode_qr_opencv(img_cv)
+# Convert to bytes for display in Streamlit
+buf = io.BytesIO()
+img.save(buf)
+buf.seek(0)
 
-        if decoded_data:
-            st.success(f"🔓 Decoded Data: {decoded_data}")
-        else:
-            st.warning("⚠️ No QR code detected.")
+# Show QR code in Streamlit
+st.image(buf, caption="Scan to view image/video")
+
+# Optionally, show the image/video itself embedded below
+st.markdown(f"[Click here to view image/video]({url})")
+
 
 # --- TAB 3: About Us ---
 with tab3:
@@ -173,3 +173,4 @@ with tab3:
             st.image(fpath, use_column_width=True)
     else:
         st.info("No snapshots uploaded yet.")
+
