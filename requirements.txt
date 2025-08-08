@@ -1,7 +1,8 @@
 streamlit
 wikipedia
 SpeechRecognition
+googletrans==4.0.0-rc1
 pillow
-opencv-python-headless
-numpy
+opencv-python
 pandas
+numpy
