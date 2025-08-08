@@ -117,7 +117,7 @@ with tab2:
 
     if uploaded_file:
         img = Image.open(uploaded_file)
-        st.image(img, caption="Uploaded QR Code", use_column_width=True)
+        st.image(img, caption="Uploaded QR Code", use_container_width=True)
 
         img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         decoded_data = decode_qr_opencv(img_cv)
@@ -174,6 +174,7 @@ with tab3:
             st.image(fpath, use_column_width=True)
     else:
         st.info("No snapshots uploaded yet.")
+
 
 
 
