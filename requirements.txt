@@ -3,6 +3,6 @@ wikipedia
 SpeechRecognition
 googletrans==4.0.0-rc1
 pillow
-opencv-python
+opencv-python-headless
 pandas
 numpy
