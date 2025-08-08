@@ -113,10 +113,18 @@ with tab2:
         data, points, _ = detector.detectAndDecode(img)
         if points is not None and data:
             return data
+
+        # Try grayscale if color detection failed
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        data, points, _ = detector.detectAndDecode(gray)
+        if points is not None and data:
+            return data
+
         return None
 
     if uploaded_file:
         img = Image.open(uploaded_file)
+        img = img.convert('RGB')  # Ensure 3-channel RGB (no alpha)
         st.image(img, caption="Uploaded QR Code", use_container_width=True)
 
         img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -126,6 +134,7 @@ with tab2:
             st.success(f"🔓 Decoded Data: {decoded_data}")
         else:
             st.warning("⚠️ No QR code detected.")
+
 
 # --- TAB 3: About Us ---
 with tab3:
@@ -174,3 +183,4 @@ with tab3:
             st.image(fpath, use_container_width=True)
     else:
         st.info("No snapshots uploaded yet.")
+
