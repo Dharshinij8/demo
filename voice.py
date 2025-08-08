@@ -8,11 +8,11 @@ import cv2
 import numpy as np
 import pandas as pd
 import datetime
+from googletrans import Translator
 
 # ---------- CONFIG & STYLE ----------
 st.set_page_config(page_title="Chatbot + QR Scanner", layout="centered")
 
-# Glow icon
 st.markdown("""
 <style>
 .glow-icon {
@@ -57,12 +57,32 @@ with tab1:
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    def get_wikipedia_summary(query):
+    # Multi-language support
+    translator = Translator()
+    lang_codes = {
+        "English": "en",
+        "French": "fr",
+        "German": "de",
+        "Spanish": "es",
+        "Hindi": "hi",
+        "Tamil": "ta",
+        "Telugu": "te",
+        "Kannada": "kn"
+    }
+
+    selected_lang = st.selectbox("🌐 Select Language", list(lang_codes.keys()), index=0)
+    target_lang = lang_codes[selected_lang]
+
+    def get_wikipedia_summary(query, target_lang="en"):
         try:
-            results = wikipedia.search(query)
+            translated_query = translator.translate(query, src=target_lang, dest="en").text
+            results = wikipedia.search(translated_query)
             if not results:
                 return "❌ Sorry, no results found."
             summary = wikipedia.summary(results[0], sentences=2, auto_suggest=False, redirect=True)
+            if target_lang != "en":
+                summary_translated = translator.translate(summary, src="en", dest=target_lang).text
+                return summary_translated
             return summary
         except wikipedia.DisambiguationError as e:
             return f"⚠️ Too broad. Did you mean: {', '.join(e.options[:5])}?"
@@ -84,7 +104,7 @@ with tab1:
         with sr.AudioFile(tmp_filename) as source:
             audio_data = recognizer.record(source)
             try:
-                recognized_text = recognizer.recognize_google(audio_data)
+                recognized_text = recognizer.recognize_google(audio_data, language=target_lang)
                 st.success(f"You said: {recognized_text}")
                 user_input_text = recognized_text
             except sr.UnknownValueError:
@@ -101,7 +121,7 @@ with tab1:
         elif user_input.lower() == "what is your name":
             response = "I'm a chatbot."
         else:
-            response = get_wikipedia_summary(user_input)
+            response = get_wikipedia_summary(user_input, target_lang=target_lang)
 
         st.session_state.chat_history.append((user_input, response))
 
@@ -174,7 +194,7 @@ with tab3:
     DHARSHINI J, SRIMATHI K, HARSHITHA B.M, AKSHAYA V 
 
     **Contact:**  
-    - Email: dharshudharshu148@gmail.com, acquireness@gmail.com,manjunath.m37@gmail.com, akshayavelu31@gmail.com 
+    - Email: dharshudharshu148@gmail.com, acquireness@gmail.com, manjunath.m37@gmail.com, akshayavelu31@gmail.com 
     
     ---
     Thank you for using our app!
@@ -205,5 +225,3 @@ with tab3:
             st.image(fpath, use_column_width=True)
     else:
         st.info("No snapshots uploaded yet.")
-
-
