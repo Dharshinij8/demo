@@ -67,7 +67,7 @@ with tab1:
         st.session_state.chat_history = []
 
     # Let user pick their language for Q&A
-    lang = st.selectbox("Choose your language:", options=["en", "kn", "ta", "fr", "es", "de", "hi", "zh", "ar", "ru", "ja"], index=0)
+    lang = st.selectbox("Choose your language:", options=["en", "fr", "es", "de", "hi", "zh", "ar", "ru", "ja"], index=0)
 
     def get_wikipedia_summary(query, user_lang="en"):
         try:
@@ -169,5 +169,56 @@ with tab2:
             df = pd.read_csv("qr_scan_log.csv")
             st.dataframe(df)
         else:
-            st.info
+            st.info("No scan history found.")
 
+    if st.button("🧹 Clear QR Scan History"):
+        if os.path.exists("qr_scan_log.csv"):
+            os.remove("qr_scan_log.csv")
+            st.success("Scan history cleared.")
+
+# ---------- TAB 3: About Us ----------
+with tab3:
+    st.subheader("About Us")
+    st.markdown("""
+    ### Welcome to Chatbot + QR Scanner!
+
+    This app combines two handy tools into one interface:
+    - 🤖 **Wikipedia Chatbot**: Ask questions by typing or uploading your voice!
+    - 📷 **QR Code Scanner**: Upload images containing QR codes and get the decoded information instantly.
+
+    ---
+    **Developed by:**  
+    DHARSHINI J, SRIMATHI K, HARSHITHA B.M, AKSHAYA V 
+
+    **Contact:**  
+    - Email: dharshudharshu148@gmail.com, acquireness@gmail.com, manjunath.m37@gmail.com, akshayavelu31@gmail.com 
+    
+    ---
+    Thank you for using our app!
+    """)
+
+    st.subheader("🔗 Link of the Project")
+    st.markdown("[Click here to view the project](https://igq6tcjypjpmh9hivnabjc.streamlit.app/)")
+
+    st.subheader("🖼️ Snapshots of the Project")
+
+    SNAPSHOT_DIR = "snapshots"
+    os.makedirs(SNAPSHOT_DIR, exist_ok=True)
+
+    uploaded_files = st.file_uploader("Upload snapshots (multiple allowed)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+
+    if uploaded_files:
+        for file in uploaded_files:
+            file_path = os.path.join(SNAPSHOT_DIR, file.name)
+            with open(file_path, "wb") as f:
+                f.write(file.getbuffer())
+        st.success("✅ Files uploaded successfully!")
+
+    saved_files = os.listdir(SNAPSHOT_DIR)
+    if saved_files:
+        st.markdown("### Saved Snapshots:")
+        for fname in saved_files:
+            fpath = os.path.join(SNAPSHOT_DIR, fname)
+            st.image(fpath, use_column_width=True)
+    else:
+        st.info("No snapshots uploaded yet.")
