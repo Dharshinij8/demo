@@ -8,12 +8,11 @@ import cv2
 import numpy as np
 import pandas as pd
 import datetime
-from pyzbar.pyzbar import decode
 
 # ---------- CONFIG & STYLE ----------
 st.set_page_config(page_title="Chatbot + QR Scanner", layout="centered")
 
-# Glow effect icon
+# Glow icon
 st.markdown("""
 <style>
 .glow-icon {
@@ -36,7 +35,7 @@ st.markdown("""
 
 st.title("🤖 Chatbot + 📷 QR Code Scanner")
 
-# Dark mode toggle (simple)
+# Dark mode toggle
 dark_mode = st.toggle("🌗 Dark Mode")
 if dark_mode:
     st.markdown("""
@@ -123,6 +122,12 @@ with tab2:
 
     uploaded_img = st.file_uploader("Upload Image with QR Code", type=["png", "jpg", "jpeg"])
 
+    def detect_qr_opencv(image):
+        img_np = np.array(image.convert('RGB'))
+        detector = cv2.QRCodeDetector()
+        data, bbox, _ = detector.detectAndDecode(img_np)
+        return data if data else None
+
     def save_qr(data):
         file = "qr_scan_log.csv"
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -133,15 +138,12 @@ with tab2:
             df.to_csv(file, index=False)
 
     if uploaded_img:
-        img = Image.open(uploaded_img).convert("RGB")
+        img = Image.open(uploaded_img)
         st.image(img, caption="Uploaded Image", use_column_width=True)
-        img_np = np.array(img)
-        decoded_objs = decode(img_np)
-        if decoded_objs:
-            for obj in decoded_objs:
-                data = obj.data.decode("utf-8")
-                st.success(f"✅ QR Code Detected: {data}")
-                save_qr(data)
+        data = detect_qr_opencv(img)
+        if data:
+            st.success(f"✅ QR Code Detected: {data}")
+            save_qr(data)
         else:
             st.warning("No QR code found in the image.")
 
