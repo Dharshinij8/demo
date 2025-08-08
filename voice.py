@@ -32,6 +32,25 @@ st.markdown(
 )
 st.title("🤖 Chatbot + 📷 QR Code Scanner")
 
+# Dark mode toggle
+dark_mode = st.toggle("🌗 Dark Mode")
+if dark_mode:
+    st.markdown("""
+        <style>
+            body {
+                background-color: #1e1e1e;
+                color: white;
+            }
+            .stApp {
+                background-color: #1e1e1e;
+            }
+            .css-1cpxqw2, .css-ffhzg2 {
+                color: white;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+
 # Tabs
 tab1, tab2, tab3 = st.tabs(["📚 Wikipedia Chatbot", "📷 QR Code Scanner", "ℹ️ About Us"])
 
@@ -104,29 +123,64 @@ with tab1:
 
 # --- TAB 2: QR Code Scanner ---
 with tab2:
-    st.subheader("📷 Upload a QR Code Image to Scan")
+    st.subheader("QR Code Scanner 📷")
+    method = st.radio("Choose method:", ["Webcam", "Upload Image"])
 
-    uploaded_file = st.file_uploader("Upload QR image", type=["png", "jpg", "jpeg"])
-
-    def decode_qr_opencv(img):
-        detector = cv2.QRCodeDetector()
-        data, points, _ = detector.detectAndDecode(img)
-        if points is not None and data:
-            return data
-        return None
-
-    if uploaded_file:
-        img = Image.open(uploaded_file)
-        st.image(img, caption="Uploaded QR Code", use_container_width=True)
-
-        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        decoded_data = decode_qr_opencv(img_cv)
-
-        if decoded_data:
-            st.success(f"🔓 Decoded Data: {decoded_data}")
+    def save_qr(data):
+        file = "qr_scan_log.csv"
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        df = pd.DataFrame([[data, now]], columns=["Data", "Timestamp"])
+        if os.path.exists(file):
+            df.to_csv(file, mode='a', header=False, index=False)
         else:
-            st.warning("⚠️ No QR code detected.")
+            df.to_csv(file, index=False)
 
+    if method == "Webcam":
+        if st.checkbox("Start Webcam"):
+            FRAME_WINDOW = st.image([])
+            cap = cv2.VideoCapture(0)
+
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                decoded_objs = decode(frame)
+                for obj in decoded_objs:
+                    data = obj.data.decode("utf-8")
+                    st.success(f"QR Code: {data}")
+                    save_qr(data)
+                    cap.release()
+                    FRAME_WINDOW.empty()
+                    st.stop()
+
+                FRAME_WINDOW.image(frame, channels="BGR")
+
+    elif method == "Upload Image":
+        uploaded_img = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"])
+        if uploaded_img:
+            img = Image.open(uploaded_img)
+            st.image(img, caption="Uploaded QR Image")
+            decoded_objs = decode(img)
+            if decoded_objs:
+                for obj in decoded_objs:
+                    data = obj.data.decode("utf-8")
+                    st.success(f"QR Code: {data}")
+                    save_qr(data)
+            else:
+                st.warning("No QR code found.")
+
+    with st.expander("📄 QR Scan History"):
+        try:
+            df = pd.read_csv("qr_scan_log.csv")
+            st.dataframe(df)
+        except:
+            st.info("No scan data available.")
+
+    if st.button("🧹 Clear QR Scan History"):
+        if os.path.exists("qr_scan_log.csv"):
+            os.remove("qr_scan_log.csv")
+            st.success("Scan history cleared.")
 # --- TAB 3: About Us ---
 with tab3:
     st.subheader("About Us")
@@ -175,4 +229,5 @@ with tab3:
             st.image(fpath, use_container_width=True)
     else:
         st.info("No snapshots uploaded yet.")
+
 
