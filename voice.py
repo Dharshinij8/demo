@@ -6,55 +6,52 @@ import os
 from PIL import Image
 import cv2
 import numpy as np
+import pandas as pd
+import datetime
+from pyzbar.pyzbar import decode
 
+# ---------- CONFIG & STYLE ----------
 st.set_page_config(page_title="Chatbot + QR Scanner", layout="centered")
-st.markdown(
-    """
-    <style>
-    .glow-icon {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: url('https://cdn-icons-png.flaticon.com/512/4712/4712039.png') no-repeat center/cover;
-        box-shadow: 0 0 20px #00ffcc, 0 0 30px #00ffcc, 0 0 40px #00ffcc;
-        animation: pulse 2s infinite;
-        margin: auto;
-    }
-    @keyframes pulse {
-        0% { box-shadow: 0 0 20px #00ffcc; }
-        50% { box-shadow: 0 0 40px #00ffcc; }
-        100% { box-shadow: 0 0 20px #00ffcc; }
-    }
-    </style>
-    <div class="glow-icon"></div>
-    """,
-    unsafe_allow_html=True
-)
+
+# Glow effect icon
+st.markdown("""
+<style>
+.glow-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: url('https://cdn-icons-png.flaticon.com/512/4712/4712039.png') no-repeat center/cover;
+    box-shadow: 0 0 20px #00ffcc, 0 0 30px #00ffcc, 0 0 40px #00ffcc;
+    animation: pulse 2s infinite;
+    margin: auto;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 20px #00ffcc; }
+    50% { box-shadow: 0 0 40px #00ffcc; }
+    100% { box-shadow: 0 0 20px #00ffcc; }
+}
+</style>
+<div class="glow-icon"></div>
+""", unsafe_allow_html=True)
+
 st.title("🤖 Chatbot + 📷 QR Code Scanner")
 
-# Dark mode toggle
+# Dark mode toggle (simple)
 dark_mode = st.toggle("🌗 Dark Mode")
 if dark_mode:
     st.markdown("""
         <style>
-            body {
-                background-color: #1e1e1e;
-                color: white;
-            }
-            .stApp {
-                background-color: #1e1e1e;
-            }
-            .css-1cpxqw2, .css-ffhzg2 {
-                color: white;
-            }
+        .stApp {
+            background-color: #1e1e1e;
+            color: white;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-
-# Tabs
+# ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs(["📚 Wikipedia Chatbot", "📷 QR Code Scanner", "ℹ️ About Us"])
 
-# --- TAB 1: Wikipedia Chatbot ---
+# ---------- TAB 1: Wikipedia Chatbot ----------
 with tab1:
     st.subheader("Ask anything. Type or speak!")
 
@@ -95,7 +92,6 @@ with tab1:
                 st.error("Sorry, could not understand your voice.")
             except sr.RequestError:
                 st.error("Could not connect to speech recognition service.")
-
         os.remove(tmp_filename)
 
     user_input = user_input_text.strip() if user_input_text else ""
@@ -121,10 +117,11 @@ with tab1:
             st.session_state.chat_history.clear()
             st.success("Chat history cleared!")
 
-# --- TAB 2: QR Code Scanner ---
+# ---------- TAB 2: QR Code Scanner ----------
 with tab2:
     st.subheader("QR Code Scanner 📷")
-    method = st.radio("Choose method:", ["Webcam", "Upload Image"])
+
+    uploaded_img = st.file_uploader("Upload Image with QR Code", type=["png", "jpg", "jpeg"])
 
     def save_qr(data):
         file = "qr_scan_log.csv"
@@ -135,61 +132,39 @@ with tab2:
         else:
             df.to_csv(file, index=False)
 
-    if method == "Webcam":
-        if st.checkbox("Start Webcam"):
-            FRAME_WINDOW = st.image([])
-            cap = cv2.VideoCapture(0)
-
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-
-                decoded_objs = decode(frame)
-                for obj in decoded_objs:
-                    data = obj.data.decode("utf-8")
-                    st.success(f"QR Code: {data}")
-                    save_qr(data)
-                    cap.release()
-                    FRAME_WINDOW.empty()
-                    st.stop()
-
-                FRAME_WINDOW.image(frame, channels="BGR")
-
-    elif method == "Upload Image":
-        uploaded_img = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"])
-        if uploaded_img:
-            img = Image.open(uploaded_img)
-            st.image(img, caption="Uploaded QR Image")
-            decoded_objs = decode(img)
-            if decoded_objs:
-                for obj in decoded_objs:
-                    data = obj.data.decode("utf-8")
-                    st.success(f"QR Code: {data}")
-                    save_qr(data)
-            else:
-                st.warning("No QR code found.")
+    if uploaded_img:
+        img = Image.open(uploaded_img).convert("RGB")
+        st.image(img, caption="Uploaded Image", use_column_width=True)
+        img_np = np.array(img)
+        decoded_objs = decode(img_np)
+        if decoded_objs:
+            for obj in decoded_objs:
+                data = obj.data.decode("utf-8")
+                st.success(f"✅ QR Code Detected: {data}")
+                save_qr(data)
+        else:
+            st.warning("No QR code found in the image.")
 
     with st.expander("📄 QR Scan History"):
-        try:
+        if os.path.exists("qr_scan_log.csv"):
             df = pd.read_csv("qr_scan_log.csv")
             st.dataframe(df)
-        except:
-            st.info("No scan data available.")
+        else:
+            st.info("No scan history found.")
 
     if st.button("🧹 Clear QR Scan History"):
         if os.path.exists("qr_scan_log.csv"):
             os.remove("qr_scan_log.csv")
             st.success("Scan history cleared.")
-# --- TAB 3: About Us ---
+
+# ---------- TAB 3: About Us ----------
 with tab3:
     st.subheader("About Us")
     st.markdown("""
     ### Welcome to Chatbot + QR Scanner!
 
     This app combines two handy tools into one interface:
-
-    - 🤖 **Wikipedia Chatbot**: Ask questions by typing or uploading your voice! Powered by Wikipedia API and speech recognition.
+    - 🤖 **Wikipedia Chatbot**: Ask questions by typing or uploading your voice!
     - 📷 **QR Code Scanner**: Upload images containing QR codes and get the decoded information instantly.
 
     ---
@@ -201,7 +176,7 @@ with tab3:
     - Website: [https://yourwebsite.com](https://yourwebsite.com)
 
     ---
-    Thank you for using our app! Feel free to contribute or suggest features.
+    Thank you for using our app!
     """)
 
     st.subheader("🔗 Link of the Project")
@@ -226,8 +201,6 @@ with tab3:
         st.markdown("### Saved Snapshots:")
         for fname in saved_files:
             fpath = os.path.join(SNAPSHOT_DIR, fname)
-            st.image(fpath, use_container_width=True)
+            st.image(fpath, use_column_width=True)
     else:
         st.info("No snapshots uploaded yet.")
-
-
