@@ -67,7 +67,7 @@ with tab1:
         st.session_state.chat_history = []
 
     # Let user pick their language for Q&A
-    lang = st.selectbox("Choose your language:", options=["en", "fr", "es", "de", "hi", "zh", "ar", "ru", "ja"], index=0)
+    lang = st.selectbox("Choose your language:", options=["en", "kn", "ta", "fr", "es", "de", "hi", "zh", "ar", "ru", "ja"], index=0)
 
     def get_wikipedia_summary(query, user_lang="en"):
         try:
@@ -170,3 +170,4 @@ with tab2:
             st.dataframe(df)
         else:
             st.info
+
