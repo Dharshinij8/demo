@@ -102,8 +102,6 @@ with tab1:
             st.session_state.chat_history.clear()
             st.success("Chat history cleared!")
 
-from pyzbar.pyzbar import decode
-
 # --- TAB 2: QR Code Scanner ---
 with tab2:
     st.subheader("📷 Upload a QR Code Image to Scan")
@@ -129,8 +127,6 @@ with tab2:
         else:
             st.warning("⚠️ No QR code detected.")
 
-
-
 # --- TAB 3: About Us ---
 with tab3:
     st.subheader("About Us")
@@ -144,17 +140,16 @@ with tab3:
 
     ---
     **Developed by:**  
-    DHARSHINI J, SRIMATHI K, HARSHITHA B.M, AKSHAYA V
+    AKSHAYA V, DHARSHINI J, HARSHITHA B.M, SRIMATHI K
 
     **Contact:**  
-    - Email: dharshudharshu148@gmail.com, acquireness@gmail.com ,manjunath.m37@gmail.com, akshayavelu31@gmail.com    
-    
+    - Email: dharshudharshu148@gmail.com, acquireness@gmail.com  
+
     ---
     Thank you for using our app! Feel free to contribute or suggest features.
     """)
 
-    st.subheader("🔗 Link of the Project")
-    st.markdown("[Click here to view the project](https://igq6tcjypjpmh9hivnabjc.streamlit.app/)")
+    # Removed website and project link section
 
     st.subheader("🖼️ Snapshots of the Project")
 
@@ -175,9 +170,6 @@ with tab3:
         st.markdown("### Saved Snapshots:")
         for fname in saved_files:
             fpath = os.path.join(SNAPSHOT_DIR, fname)
-            st.image(fpath, use_container_width=True)
+            st.image(fpath, use_column_width=True)
     else:
         st.info("No snapshots uploaded yet.")
-
-
-
